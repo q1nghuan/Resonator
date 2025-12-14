@@ -1,0 +1,5 @@
+{
+  "name": "Resonator",
+  "description": "A smart planning tool and AI companion that helps you bridge the gap between your current state and your ideal self. Features dual-agent support (Compassionate vs. Ideal Self) and intelligent schedule management.",
+  "requestFramePermissions": []
+}
