@@ -50,9 +50,30 @@ export interface AIResponseSchema {
   suggested_actions: TaskAction[];
 }
 
+export interface AgentPersona {
+  name: string;
+  description: string;
+  systemInstruction: string;
+}
+
 export interface UserSettings {
   name: string;
   workStartHour: number;
   workEndHour: number;
   theme: 'light' | 'dark';
+  agentPersonas?: {
+    [AgentType.COMPANION]: AgentPersona;
+    [AgentType.IDEAL_SELF]: AgentPersona;
+  };
+}
+
+export interface UserHabits {
+  preferredWorkTimes: string[]; // 用户偏好的工作时间段
+  taskPreferences: {
+    preferredDuration: number; // 偏好的任务时长
+    preferredCategories: string[]; // 偏好的任务类别
+  };
+  communicationStyle: string; // 用户的沟通风格
+  recentPatterns: string[]; // 最近的模式/习惯
+  lastUpdated: number; // 最后更新时间戳
 }

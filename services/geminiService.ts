@@ -1,5 +1,5 @@
 import { GoogleGenAI, Schema, Type } from "@google/genai";
-import { AgentType, Task, TaskAction, AIResponseSchema } from '../types';
+import { AgentType, Task, TaskAction, AIResponseSchema, UserSettings, UserHabits } from '../types';
 import { AGENT_PERSONAS } from '../constants';
 
 const apiKey = process.env.API_KEY || '';
@@ -44,7 +44,9 @@ export const generateAgentResponse = async (
   agentType: AgentType,
   userMessage: string,
   currentTasks: Task[],
-  moodContext: string
+  moodContext: string,
+  userSettings?: UserSettings,
+  userHabits?: UserHabits
 ): Promise<AIResponseSchema> => {
   
   if (!apiKey) {
@@ -54,7 +56,9 @@ export const generateAgentResponse = async (
     };
   }
 
-  const persona = AGENT_PERSONAS[agentType];
+  // 使用自定义agent配置或默认配置
+  const defaultPersona = AGENT_PERSONAS[agentType];
+  const persona = userSettings?.agentPersonas?.[agentType] || defaultPersona;
   
   // Create a simplified view of tasks for the AI to process
   const taskContext = JSON.stringify(currentTasks.map(t => ({ 
@@ -85,6 +89,23 @@ export const generateAgentResponse = async (
     用户当前心情: ${moodContext}
     当前任务列表 (JSON): ${taskContext}
     ${dateTimeContext}
+    
+    ${userHabits ? `
+    === 用户个性化信息 ===
+    用户偏好工作时间段: ${userHabits.preferredWorkTimes.length > 0 ? userHabits.preferredWorkTimes.join(', ') : '暂无记录'}
+    偏好任务时长: ${userHabits.taskPreferences.preferredDuration}分钟
+    偏好任务类别: ${userHabits.taskPreferences.preferredCategories.length > 0 ? userHabits.taskPreferences.preferredCategories.join(', ') : '暂无记录'}
+    沟通风格: ${userHabits.communicationStyle || '待观察'}
+    最近行为模式: ${userHabits.recentPatterns.length > 0 ? userHabits.recentPatterns.join('; ') : '暂无记录'}
+    
+    请根据这些个性化信息调整你的回复和建议，使其更符合用户的习惯和偏好。
+    ` : ''}
+    
+    ${userSettings ? `
+    === 用户设置 ===
+    用户名: ${userSettings.name}
+    工作时间: ${userSettings.workStartHour}:00 - ${userSettings.workEndHour}:00
+    ` : ''}
 
     === 你的理念 ===
     你不仅仅是一个机械的日程安排工具。你是一位教练。

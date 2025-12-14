@@ -1,6 +1,7 @@
 import React from 'react';
-import { UserSettings } from '../types';
-import { User, Moon, Sun, Clock, Save } from 'lucide-react';
+import { UserSettings, AgentType, AgentPersona } from '../types';
+import { User, Moon, Sun, Clock, Save, Bot, Heart } from 'lucide-react';
+import { AGENT_PERSONAS } from '../constants';
 
 interface SettingsViewProps {
   settings: UserSettings;
@@ -8,8 +9,15 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) => {
-  const [formData, setFormData] = React.useState<UserSettings>(settings);
+  const [formData, setFormData] = React.useState<UserSettings>({
+    ...settings,
+    agentPersonas: settings.agentPersonas || {
+      [AgentType.COMPANION]: AGENT_PERSONAS[AgentType.COMPANION],
+      [AgentType.IDEAL_SELF]: AGENT_PERSONAS[AgentType.IDEAL_SELF]
+    }
+  });
   const [isSaved, setIsSaved] = React.useState(false);
+  const [expandedAgent, setExpandedAgent] = React.useState<AgentType | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +84,182 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
                   <option key={i} value={i}>{i}:00</option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        {/* AI Agent Customization */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <Bot size={16} /> AI 代理自定义
+          </h3>
+          <p className="text-sm text-slate-500">自定义你的AI代理的人格和回复风格。</p>
+          
+          <div className="space-y-4">
+            {/* Companion Agent */}
+            <div className="border border-slate-200 rounded-xl p-4">
+              <button
+                type="button"
+                onClick={() => setExpandedAgent(expandedAgent === AgentType.COMPANION ? null : AgentType.COMPANION)}
+                className="w-full flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Heart size={20} className="text-rose-500" />
+                  <div className="text-left">
+                    <div className="font-semibold text-slate-800">
+                      {formData.agentPersonas?.[AgentType.COMPANION]?.name || AGENT_PERSONAS[AgentType.COMPANION].name}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {formData.agentPersonas?.[AgentType.COMPANION]?.description || AGENT_PERSONAS[AgentType.COMPANION].description}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-slate-400">{expandedAgent === AgentType.COMPANION ? '▼' : '▶'}</span>
+              </button>
+              
+              {expandedAgent === AgentType.COMPANION && (
+                <div className="mt-4 space-y-3 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">名称</label>
+                    <input
+                      type="text"
+                      value={formData.agentPersonas?.[AgentType.COMPANION]?.name || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.COMPANION]: {
+                            ...formData.agentPersonas![AgentType.COMPANION],
+                            name: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">描述</label>
+                    <input
+                      type="text"
+                      value={formData.agentPersonas?.[AgentType.COMPANION]?.description || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.COMPANION]: {
+                            ...formData.agentPersonas![AgentType.COMPANION],
+                            description: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">系统指令</label>
+                    <textarea
+                      value={formData.agentPersonas?.[AgentType.COMPANION]?.systemInstruction || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.COMPANION]: {
+                            ...formData.agentPersonas![AgentType.COMPANION],
+                            systemInstruction: e.target.value
+                          }
+                        }
+                      })}
+                      rows={4}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary resize-none"
+                      placeholder="定义这个代理的行为和回复风格..."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Ideal Self Agent */}
+            <div className="border border-slate-200 rounded-xl p-4">
+              <button
+                type="button"
+                onClick={() => setExpandedAgent(expandedAgent === AgentType.IDEAL_SELF ? null : AgentType.IDEAL_SELF)}
+                className="w-full flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Bot size={20} className="text-indigo-500" />
+                  <div className="text-left">
+                    <div className="font-semibold text-slate-800">
+                      {formData.agentPersonas?.[AgentType.IDEAL_SELF]?.name || AGENT_PERSONAS[AgentType.IDEAL_SELF].name}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {formData.agentPersonas?.[AgentType.IDEAL_SELF]?.description || AGENT_PERSONAS[AgentType.IDEAL_SELF].description}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-slate-400">{expandedAgent === AgentType.IDEAL_SELF ? '▼' : '▶'}</span>
+              </button>
+              
+              {expandedAgent === AgentType.IDEAL_SELF && (
+                <div className="mt-4 space-y-3 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">名称</label>
+                    <input
+                      type="text"
+                      value={formData.agentPersonas?.[AgentType.IDEAL_SELF]?.name || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.IDEAL_SELF]: {
+                            ...formData.agentPersonas![AgentType.IDEAL_SELF],
+                            name: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">描述</label>
+                    <input
+                      type="text"
+                      value={formData.agentPersonas?.[AgentType.IDEAL_SELF]?.description || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.IDEAL_SELF]: {
+                            ...formData.agentPersonas![AgentType.IDEAL_SELF],
+                            description: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">系统指令</label>
+                    <textarea
+                      value={formData.agentPersonas?.[AgentType.IDEAL_SELF]?.systemInstruction || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        agentPersonas: {
+                          ...formData.agentPersonas!,
+                          [AgentType.IDEAL_SELF]: {
+                            ...formData.agentPersonas![AgentType.IDEAL_SELF],
+                            systemInstruction: e.target.value
+                          }
+                        }
+                      })}
+                      rows={4}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary resize-none"
+                      placeholder="定义这个代理的行为和回复风格..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

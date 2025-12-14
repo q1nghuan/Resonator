@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AgentType, Task, MoodEntry, ChatMessage, TaskStatus, TaskAction, UserSettings } from './types';
+import React, { useState, useEffect, useRef } from 'react';
+import { AgentType, Task, MoodEntry, ChatMessage, TaskStatus, TaskAction, UserSettings, UserHabits } from './types';
 import { INITIAL_TASKS, INITIAL_MOOD_HISTORY, AGENT_PERSONAS } from './constants';
 import { TaskBoard } from './components/TaskBoard';
 import { AgentChat } from './components/AgentChat';
@@ -22,8 +22,24 @@ export const App: React.FC = () => {
     name: 'Alex',
     workStartHour: 9,
     workEndHour: 18,
-    theme: 'dark' // Force dark for now given the redesign
+    theme: 'dark', // Force dark for now given the redesign
+    agentPersonas: undefined // 使用默认配置
   });
+  
+  // 用户习惯记录
+  const [userHabits, setUserHabits] = useState<UserHabits>({
+    preferredWorkTimes: [],
+    taskPreferences: {
+      preferredDuration: 30,
+      preferredCategories: []
+    },
+    communicationStyle: '',
+    recentPatterns: [],
+    lastUpdated: Date.now()
+  });
+  
+  // 用于记录用户消息历史，用于分析习惯
+  const userMessagesRef = useRef<string[]>([]);
   
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -78,13 +94,94 @@ export const App: React.FC = () => {
     }));
   };
 
+  // 分析并更新用户习惯
+  const updateUserHabits = (userMessage: string, suggestedActions: TaskAction[]) => {
+    setUserHabits(prev => {
+      const newHabits = { ...prev };
+      
+      // 记录用户消息
+      userMessagesRef.current.push(userMessage);
+      if (userMessagesRef.current.length > 20) {
+        userMessagesRef.current.shift(); // 只保留最近20条
+      }
+      
+      // 分析任务偏好
+      suggestedActions.forEach(action => {
+        if (action.taskData) {
+          // 记录偏好的任务时长
+          if (action.taskData.durationMinutes) {
+            const durations = [...(newHabits.taskPreferences.preferredDuration ? [newHabits.taskPreferences.preferredDuration] : []), action.taskData.durationMinutes];
+            newHabits.taskPreferences.preferredDuration = Math.round(
+              durations.reduce((a, b) => a + b, 0) / durations.length
+            );
+          }
+          
+          // 记录偏好的任务类别
+          if (action.taskData.category && !newHabits.taskPreferences.preferredCategories.includes(action.taskData.category)) {
+            newHabits.taskPreferences.preferredCategories = [
+              ...newHabits.taskPreferences.preferredCategories,
+              action.taskData.category
+            ].slice(-5); // 只保留最近5个
+          }
+          
+          // 分析工作时间偏好
+          if (action.taskData.dueTime) {
+            const taskTime = new Date(action.taskData.dueTime);
+            const hour = taskTime.getHours();
+            const timeStr = `${hour}:00-${hour + 1}:00`;
+            if (!newHabits.preferredWorkTimes.includes(timeStr)) {
+              newHabits.preferredWorkTimes = [
+                ...newHabits.preferredWorkTimes,
+                timeStr
+              ].slice(-10); // 只保留最近10个时间段
+            }
+          }
+        }
+      });
+      
+      // 分析沟通风格（从最近的消息中提取关键词）
+      const recentMessages = userMessagesRef.current.slice(-5).join(' ');
+      if (recentMessages.length > 0) {
+        // 简单的风格分析
+        if (recentMessages.includes('谢谢') || recentMessages.includes('感谢')) {
+          newHabits.communicationStyle = '礼貌、正式';
+        } else if (recentMessages.includes('！') || recentMessages.includes('？')) {
+          newHabits.communicationStyle = '热情、直接';
+        } else {
+          newHabits.communicationStyle = '简洁、实用';
+        }
+      }
+      
+      // 记录最近模式
+      if (suggestedActions.length > 0) {
+        const pattern = suggestedActions.map(a => a.type).join(',');
+        if (!newHabits.recentPatterns.includes(pattern)) {
+          newHabits.recentPatterns = [...newHabits.recentPatterns, pattern].slice(-5);
+        }
+      }
+      
+      newHabits.lastUpdated = Date.now();
+      return newHabits;
+    });
+  };
+
   const handleSendMessage = async (text: string) => {
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text, timestamp: Date.now() };
     setChatMessages(prev => [...prev, userMsg]);
     setIsTyping(true);
 
-    const moodContext = `User average mood last week was ${moodHistory.reduce((a,b) => a + b.score, 0) / moodHistory.length}/10.`;
-    const aiResponse = await generateAgentResponse(activeAgent, text, tasks, moodContext);
+    const moodContext = `用户上周平均心情为 ${(moodHistory.reduce((a,b) => a + b.score, 0) / moodHistory.length).toFixed(1)}/10。`;
+    const aiResponse = await generateAgentResponse(
+      activeAgent, 
+      text, 
+      tasks, 
+      moodContext,
+      userSettings,
+      userHabits
+    );
+    
+    // 更新用户习惯
+    updateUserHabits(text, aiResponse.suggested_actions);
     
     const modelMsg: ChatMessage = {
       id: (Date.now() + 1).toString(),
@@ -250,6 +347,7 @@ export const App: React.FC = () => {
                     onAgentChange={setActiveAgent}
                     onApproveAction={handleApproveAction}
                     onDismissAction={handleDismissAction}
+                    userSettings={userSettings}
                 />
              </div>
         </div>

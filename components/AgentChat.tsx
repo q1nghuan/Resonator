@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AgentType, ChatMessage, TaskAction } from '../types';
+import { AgentType, ChatMessage, TaskAction, UserSettings } from '../types';
 import { Sparkles, Heart, Bot, ArrowRight, X, Check, Lightbulb } from 'lucide-react';
 import { AGENT_PERSONAS } from '../constants';
 
@@ -11,6 +11,7 @@ interface AgentChatProps {
   onAgentChange: (agent: AgentType) => void;
   onApproveAction: (action: TaskAction, messageId: string) => void;
   onDismissAction: (action: TaskAction, messageId: string) => void;
+  userSettings?: UserSettings;
 }
 
 export const AgentChat: React.FC<AgentChatProps> = ({ 
@@ -20,8 +21,13 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   onSendMessage, 
   onAgentChange,
   onApproveAction,
-  onDismissAction
+  onDismissAction,
+  userSettings
 }) => {
+  // 获取当前agent的配置（自定义或默认）
+  const getAgentPersona = (agentType: AgentType) => {
+    return userSettings?.agentPersonas?.[agentType] || AGENT_PERSONAS[agentType];
+  };
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -129,7 +135,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             }`}
           >
             <Heart size={16} className={currentAgent === AgentType.COMPANION ? 'fill-current' : ''} />
-            伴侣
+            {getAgentPersona(AgentType.COMPANION).name}
           </button>
           <button 
             onClick={() => onAgentChange(AgentType.IDEAL_SELF)}
@@ -140,11 +146,11 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             }`}
           >
             <Bot size={16} />
-            理想自我
+            {getAgentPersona(AgentType.IDEAL_SELF).name}
           </button>
         </div>
         <p className="text-xs text-center text-slate-400 px-4">
-          {AGENT_PERSONAS[currentAgent].description}
+          {getAgentPersona(currentAgent).description}
         </p>
       </div>
 
@@ -195,7 +201,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={`与你的${currentAgent === AgentType.COMPANION ? '伴侣' : '理想自我'}对话...`}
+            placeholder={`与你的${getAgentPersona(currentAgent).name}对话...`}
             className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 resize-none h-12"
             rows={1}
           />
