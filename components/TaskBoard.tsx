@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Task, TaskStatus } from '../types';
 import { CheckCircle2, Circle, Clock, Plus, AlertCircle, Calendar } from 'lucide-react';
 
@@ -11,7 +11,18 @@ interface TaskBoardProps {
 
 const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void }> = ({ task, onToggle, onEdit }) => {
   const isDone = task.status === TaskStatus.DONE;
-  const isReschedule = task.status === TaskStatus.PENDING_RESCHEDULE;
+  
+  // ---------------------------------------------------------
+  // 修复逻辑：实时计算是否过期
+  // ---------------------------------------------------------
+  const isOverdue = useMemo(() => {
+    if (isDone || !task.dueTime) return false;
+    return new Date(task.dueTime) < new Date();
+  }, [task.dueTime, isDone]);
+
+  // isReschedule: 既包括手动标记为重排的状态，也包括时间上已经过期的任务
+  const isReschedule = task.status === TaskStatus.PENDING_RESCHEDULE || isOverdue;
+  // ---------------------------------------------------------
 
   // Category Color Map for Dark Mode
   const CAT_STYLES = {
@@ -49,9 +60,9 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
               {task.title}
             </h4>
             <div className="flex gap-2">
-                {isReschedule && (
+                {isReschedule && !isDone && (
                     <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-bold bg-amber-500/20 text-amber-300 border border-amber-500/20">
-                        已过期
+                        {isOverdue ? '已过期' : '重排'}
                     </span>
                 )}
                 <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-bold border ${CAT_STYLES[task.category]}`}>
@@ -82,7 +93,13 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
 };
 
 export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onAddTask, onEditTask }) => {
-  // 获取今天的日期字符串（UTC+8时区），用于比较
+  // 强制刷新：每分钟更新一次组件，确保过期状态实时更新
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const today = new Date();
   const todayDateStr = today.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
@@ -91,8 +108,10 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
     timeZone: 'Asia/Shanghai' 
   });
 
-  // 过滤出当天及未来的任务，并按日期分组
   const tasksByDate = useMemo(() => {
+    // ---------------------------------------------------------
+    // 修复逻辑：不过滤掉过去的未完成任务
+    // ---------------------------------------------------------
     const filtered = tasks.filter(task => {
       if (!task.dueTime) return false;
       const taskDate = new Date(task.dueTime);
@@ -102,11 +121,13 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
         day: '2-digit',
         timeZone: 'Asia/Shanghai'
       });
-      // 比较日期字符串（格式：YYYY/MM/DD）
-      return taskDateStr >= todayDateStr;
+      
+      const isDone = task.status === TaskStatus.DONE;
+      
+      // 保留条件：(日期是今天或未来) 或者 (未完成的任务，即使日期是过去)
+      return taskDateStr >= todayDateStr || !isDone;
     });
 
-    // 按日期分组
     const grouped: Record<string, Task[]> = {};
     filtered.forEach(task => {
       if (!task.dueTime) return;
@@ -124,26 +145,30 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
       grouped[dateKey].push(task);
     });
 
-    // 对每个日期的任务进行排序
+    // 排序逻辑优化：优先显示过期/重排任务
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => {
-        const getScore = (status: TaskStatus) => {
-          switch(status) {
-            case TaskStatus.PENDING_RESCHEDULE: return 0;
-            case TaskStatus.IN_PROGRESS: return 1;
-            case TaskStatus.TODO: return 2;
-            case TaskStatus.DONE: return 3;
-            default: return 2;
-          }
+        const now = new Date();
+        const getScore = (task: Task) => {
+           // 计算是否过期
+           const isExpired = task.dueTime && new Date(task.dueTime) < now && task.status !== TaskStatus.DONE;
+           
+           if (task.status === TaskStatus.DONE) return 4;
+           if (task.status === TaskStatus.PENDING_RESCHEDULE || isExpired) return 0; // 最优先
+           if (task.status === TaskStatus.IN_PROGRESS) return 1;
+           return 2; // TODO
         };
-        if (getScore(a.status) !== getScore(b.status)) {
-          return getScore(a.status) - getScore(b.status);
+        
+        const scoreA = getScore(a);
+        const scoreB = getScore(b);
+
+        if (scoreA !== scoreB) {
+          return scoreA - scoreB;
         }
         return (a.dueTime || '') > (b.dueTime || '') ? 1 : -1;
       });
     });
 
-    // 按日期排序
     const sortedDates = Object.keys(grouped).sort((a, b) => {
       const dateA = new Date(a.replace(/\//g, '-'));
       const dateB = new Date(b.replace(/\//g, '-'));
@@ -156,17 +181,22 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
     }));
   }, [tasks, todayDateStr]);
 
-  // 格式化日期显示
   const formatDateLabel = (dateStr: string) => {
     const date = new Date(dateStr.replace(/\//g, '-'));
     const today = new Date();
+    // 重置时间部分以便只比较日期
+    const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dateZero = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
     const todayStr = today.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone: 'Asia/Shanghai'
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Shanghai'
     });
     
+    // 判断是否是过去
+    if (dateZero < todayZero) {
+        return `已过期 - ${date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}`;
+    }
+
     if (dateStr === todayStr) {
       return '今天';
     }
@@ -174,10 +204,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone: 'Asia/Shanghai'
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Shanghai'
     });
     
     if (dateStr === tomorrowStr) {
@@ -213,31 +240,38 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
              <p className="text-slate-400 font-serif italic text-lg">虚空中的寂静。</p>
            </div>
         ) : (
-            tasksByDate.map(({ date, tasks }) => (
-              <div key={date} className="space-y-3">
-                {/* 日期标题 */}
-                <div className="flex items-center gap-2 px-2 sticky top-0 z-10 bg-transparent backdrop-blur-sm pb-2">
-                  <Calendar size={16} className="text-indigo-400" />
-                  <h3 className="text-sm font-mono font-bold text-indigo-300 uppercase tracking-wider">
-                    {formatDateLabel(date)}
-                  </h3>
-                  <div className="flex-1 h-px bg-gradient-to-r from-indigo-500/30 to-transparent"></div>
-                  <span className="text-xs text-slate-500 font-mono">{tasks.length} 个任务</span>
+            tasksByDate.map(({ date, tasks }) => {
+              // 判断该组是否全是过期任务
+              const isPastGroup = date.includes('已过期');
+
+              return (
+                <div key={date} className="space-y-3">
+                  <div className="flex items-center gap-2 px-2 sticky top-0 z-10 bg-transparent backdrop-blur-sm pb-2">
+                    {isPastGroup ? (
+                        <AlertCircle size={16} className="text-amber-500" />
+                    ) : (
+                        <Calendar size={16} className="text-indigo-400" />
+                    )}
+                    <h3 className={`text-sm font-mono font-bold uppercase tracking-wider ${isPastGroup ? 'text-amber-400' : 'text-indigo-300'}`}>
+                      {formatDateLabel(date)}
+                    </h3>
+                    <div className={`flex-1 h-px bg-gradient-to-r ${isPastGroup ? 'from-amber-500/30' : 'from-indigo-500/30'} to-transparent`}></div>
+                    <span className="text-xs text-slate-500 font-mono">{tasks.length} 个任务</span>
+                  </div>
+                  
+                  <div className="space-y-3 pl-2">
+                    {tasks.map(task => (
+                      <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        onToggle={() => onToggleStatus(task.id)} 
+                        onEdit={() => onEditTask(task)}
+                      />
+                    ))}
+                  </div>
                 </div>
-                
-                {/* 该日期的任务列表 */}
-                <div className="space-y-3 pl-2">
-                  {tasks.map(task => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      onToggle={() => onToggleStatus(task.id)} 
-                      onEdit={() => onEditTask(task)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
+              );
+            })
         )}
       </div>
     </div>
