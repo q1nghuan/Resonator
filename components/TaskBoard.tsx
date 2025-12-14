@@ -51,11 +51,11 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
             <div className="flex gap-2">
                 {isReschedule && (
                     <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-bold bg-amber-500/20 text-amber-300 border border-amber-500/20">
-                        Missed
+                        已过期
                     </span>
                 )}
                 <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-bold border ${CAT_STYLES[task.category]}`}>
-                    {task.category}
+                    {task.category === 'work' ? '工作' : task.category === 'personal' ? '个人' : task.category === 'growth' ? '成长' : '健康'}
                 </span>
             </div>
           </div>
@@ -70,10 +70,10 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
             {task.dueTime && (
               <div className={`flex items-center gap-1 px-2 py-1 rounded-md ${isReschedule ? 'bg-amber-500/10 text-amber-400' : 'bg-white/5 text-slate-400'}`}>
                 <Clock size={12} />
-                <span className="font-mono">{new Date(task.dueTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="font-mono">{new Date(task.dueTime).toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', timeZone: 'Asia/Shanghai'})}</span>
               </div>
             )}
-            <div className="bg-white/5 px-2 py-1 rounded-md text-slate-400 font-mono">{task.durationMinutes} min</div>
+            <div className="bg-white/5 px-2 py-1 rounded-md text-slate-400 font-mono">{task.durationMinutes} 分钟</div>
           </div>
         </div>
       </div>
@@ -100,8 +100,8 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center mb-6 px-2">
         <div>
-            <h2 className="text-2xl font-serif font-bold text-white tracking-wide">Daily Trajectory</h2>
-            <p className="text-slate-400 text-xs font-mono mt-1">Design your orbit.</p>
+            <h2 className="text-2xl font-serif font-bold text-white tracking-wide">每日轨迹</h2>
+            <p className="text-slate-400 text-xs font-mono mt-1">设计你的轨道。</p>
         </div>
         <button 
           onClick={onAddTask}
@@ -114,7 +114,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-20 scrollbar-hide">
         {sortedTasks.length === 0 ? (
            <div className="text-center py-20 opacity-50">
-             <p className="text-slate-400 font-serif italic text-lg">Silence in the void.</p>
+             <p className="text-slate-400 font-serif italic text-lg">虚空中的寂静。</p>
            </div>
         ) : (
             sortedTasks.map(task => (

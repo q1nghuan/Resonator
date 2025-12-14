@@ -55,7 +55,7 @@ export const ResonanceWave: React.FC<{ data: MoodEntry[] }> = ({ data }) => {
       <div className="flex items-center justify-between mb-2 relative z-10">
         <div>
             <h3 className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2 uppercase tracking-widest">
-               <Activity size={12} className="text-rose-400"/> Emotional Flow
+               <Activity size={12} className="text-rose-400"/> 情绪流动
             </h3>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const HolisticBalance: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
        <div className="flex items-center justify-between mb-0 z-10">
             <div>
                 <h3 className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2 uppercase tracking-widest">
-                   <Hexagon size={12} className="text-violet-400"/> Focus Net
+                   <Hexagon size={12} className="text-violet-400"/> 专注网络
                 </h3>
             </div>
        </div>
@@ -153,7 +153,7 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                 y: t.durationMinutes,
                 name: t.title,
                 category: t.category,
-                timeStr: d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                timeStr: d.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', timeZone: 'Asia/Shanghai'})
             };
         });
 
@@ -162,7 +162,7 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
              <div className="flex items-center justify-between mb-0 z-10">
                 <div>
                     <h3 className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2 uppercase tracking-widest">
-                        <Clock4 size={12} className="text-sky-400"/> Rhythm
+                        <Clock4 size={12} className="text-sky-400"/> 节奏
                     </h3>
                 </div>
             </div>
@@ -173,8 +173,8 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                     <XAxis 
                         type="number" 
                         dataKey="x" 
-                        name="Time" 
-                        unit="h" 
+                        name="时间" 
+                        unit="时" 
                         domain={[6, 22]} 
                         tick={{fontSize: 9, fill: '#64748b'}}
                         tickCount={5}
@@ -185,15 +185,15 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                     <YAxis 
                         type="number" 
                         dataKey="y" 
-                        name="Duration" 
-                        unit=" min" 
+                        name="时长" 
+                        unit=" 分钟" 
                         tick={{fontSize: 9, fill: '#64748b'}}
                         axisLine={false}
                         tickLine={false}
                     />
                     <ZAxis range={[50, 400]} />
                     <Tooltip cursor={{ strokeDasharray: '3 3', stroke: '#475569' }} content={<CustomTooltip type="scatter" />} />
-                    <Scatter name="Tasks" data={data} fill="#8884d8">
+                    <Scatter name="任务" data={data} fill="#8884d8">
                         {data.map((entry, index) => {
                             const color = 
                                 entry.category === 'work' ? COLORS.work : 

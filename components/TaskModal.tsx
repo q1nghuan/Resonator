@@ -11,10 +11,10 @@ interface TaskModalProps {
 }
 
 const CATEGORIES = [
-  { id: 'work', label: 'Work', icon: Briefcase, color: 'bg-violet-100 text-violet-600 border-violet-200' },
-  { id: 'personal', label: 'Personal', icon: User, color: 'bg-rose-100 text-rose-600 border-rose-200' },
-  { id: 'growth', label: 'Growth', icon: Sparkles, color: 'bg-sky-100 text-sky-600 border-sky-200' },
-  { id: 'health', label: 'Health', icon: Heart, color: 'bg-emerald-100 text-emerald-600 border-emerald-200' },
+  { id: 'work', label: '工作', icon: Briefcase, color: 'bg-violet-100 text-violet-600 border-violet-200' },
+  { id: 'personal', label: '个人', icon: User, color: 'bg-rose-100 text-rose-600 border-rose-200' },
+  { id: 'growth', label: '成长', icon: Sparkles, color: 'bg-sky-100 text-sky-600 border-sky-200' },
+  { id: 'health', label: '健康', icon: Heart, color: 'bg-emerald-100 text-emerald-600 border-emerald-200' },
 ] as const;
 
 export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, onDelete, initialTask }) => {
@@ -37,7 +37,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
         if (initialTask.dueTime) {
           const d = new Date(initialTask.dueTime);
           setDate(d.toISOString().split('T')[0]);
-          setTime(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+          setTime(d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }));
         }
       } else {
         // Defaults for new task
@@ -47,7 +47,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
         setDuration(30);
         const now = new Date();
         setDate(now.toISOString().split('T')[0]);
-        setTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+        setTime(now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }));
       }
     }
   }, [isOpen, initialTask]);
@@ -85,7 +85,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-slate-100">
           <h2 className="text-xl font-serif font-bold text-slate-800">
-            {initialTask ? 'Edit Task' : 'New Task'}
+            {initialTask ? '编辑任务' : '新建任务'}
           </h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors">
             <X size={20} />
@@ -97,13 +97,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
           {/* Title & Category */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">What needs to be done?</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">需要做什么？</label>
               <input 
                 type="text" 
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Morning Jog, Finish Report"
+                placeholder="例如：晨跑、完成报告"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400"
               />
             </div>
@@ -133,7 +133,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
              {/* Row 1: Date and Time */}
              <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                   <Calendar size={12} /> Date & Time
+                   <Calendar size={12} /> 日期和时间
                 </label>
                 <div className="flex gap-3">
                    <input 
@@ -154,7 +154,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
              {/* Row 2: Duration */}
              <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                   <Clock size={12} /> Duration (min)
+                   <Clock size={12} /> 时长（分钟）
                 </label>
                 <div className="relative">
                   <input 
@@ -166,7 +166,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-primary focus:outline-none"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400 text-xs">
-                    minutes
+                    分钟
                   </div>
                 </div>
              </div>
@@ -174,11 +174,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Notes</label>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">备注</label>
             <textarea 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add details, subtasks, or reflections..."
+              placeholder="添加详细信息、子任务或反思..."
               rows={3}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 text-sm placeholder-slate-400 resize-none"
             />
@@ -190,14 +190,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                <button 
                  type="button"
                  onClick={() => {
-                    if(confirm('Are you sure you want to delete this task?')) {
+                    if(confirm('确定要删除这个任务吗？')) {
                         onDelete(initialTask.id);
                         onClose();
                     }
                  }}
                  className="flex items-center gap-2 text-rose-500 hover:text-rose-600 text-sm font-medium px-2 py-1 rounded hover:bg-rose-50 transition-colors"
                >
-                 <Trash2 size={16} /> Delete
+                 <Trash2 size={16} /> 删除
                </button>
              ) : (
                 <div></div> /* Spacer */
@@ -209,13 +209,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                  onClick={onClose}
                  className="px-5 py-2.5 text-slate-500 font-medium hover:bg-slate-100 rounded-xl transition-colors"
                >
-                 Cancel
+                 取消
                </button>
                <button 
                  type="submit"
                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl shadow-lg shadow-slate-200 transition-all active:scale-95"
                >
-                 {initialTask ? 'Save Changes' : 'Create Task'}
+                 {initialTask ? '保存更改' : '创建任务'}
                </button>
              </div>
           </div>

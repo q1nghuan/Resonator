@@ -47,11 +47,11 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   // Action Card Component
   const ActionCard: React.FC<{ action: TaskAction, messageId: string }> = ({ action, messageId }) => {
     const actionTitle = () => {
-        if (action.type === 'ADD' && action.taskData) return `Plan: ${action.taskData.title}`;
-        if (action.type === 'UPDATE') return `Adjust Task`;
-        if (action.type === 'DELETE') return `Remove Task`;
-        if (action.type === 'RESCHEDULE') return `Reschedule`;
-        return 'Suggestion';
+        if (action.type === 'ADD' && action.taskData) return `计划: ${action.taskData.title}`;
+        if (action.type === 'UPDATE') return `调整任务`;
+        if (action.type === 'DELETE') return `删除任务`;
+        if (action.type === 'RESCHEDULE') return `重新安排`;
+        return '建议';
     };
 
     return (
@@ -79,7 +79,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 </div>
                 {action.taskData?.description && (
                     <p className="text-xs text-slate-400 mt-2 pl-6 border-l-2 border-slate-200">
-                        Note: {action.taskData.description}
+                        备注: {action.taskData.description}
                     </p>
                 )}
             </div>
@@ -91,7 +91,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                         <span>⏱ {action.taskData.durationMinutes} min</span>
                     )}
                     {action.taskData.dueTime && (
-                        <span>📅 {new Date(action.taskData.dueTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        <span>📅 {new Date(action.taskData.dueTime).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit', timeZone: 'Asia/Shanghai'})}</span>
                     )}
                 </div>
             )}
@@ -101,7 +101,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                     onClick={() => onApproveAction(action, messageId)}
                     className="flex-1 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
                 >
-                    <Check size={14} /> Apply
+                    <Check size={14} /> 应用
                 </button>
                 <button 
                     onClick={() => onDismissAction(action, messageId)}
@@ -129,7 +129,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             }`}
           >
             <Heart size={16} className={currentAgent === AgentType.COMPANION ? 'fill-current' : ''} />
-            Companion
+            伴侣
           </button>
           <button 
             onClick={() => onAgentChange(AgentType.IDEAL_SELF)}
@@ -140,7 +140,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             }`}
           >
             <Bot size={16} />
-            Ideal Self
+            理想自我
           </button>
         </div>
         <p className="text-xs text-center text-slate-400 px-4">
@@ -171,7 +171,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               ))}
               
               <span className="text-[10px] text-slate-300 mt-1 px-1">
-                {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                {new Date(msg.timestamp).toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', timeZone: 'Asia/Shanghai'})}
               </span>
             </div>
           </div>
@@ -195,7 +195,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={`Talk to your ${currentAgent === AgentType.COMPANION ? 'companion' : 'ideal self'}...`}
+            placeholder={`与你的${currentAgent === AgentType.COMPANION ? '伴侣' : '理想自我'}对话...`}
             className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 resize-none h-12"
             rows={1}
           />

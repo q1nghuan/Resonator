@@ -21,8 +21,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
   return (
     <div className="max-w-2xl mx-auto pt-4">
       <div className="mb-8">
-        <h2 className="text-2xl font-serif font-bold text-slate-800">Settings</h2>
-        <p className="text-slate-500 text-sm">Customize your Resonator experience.</p>
+        <h2 className="text-2xl font-serif font-bold text-slate-800">设置</h2>
+        <p className="text-slate-500 text-sm">自定义你的 Resonator 体验。</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 space-y-8">
@@ -30,10 +30,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
         {/* Profile Section */}
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <User size={16} /> Profile
+            <User size={16} /> 个人资料
           </h3>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Display Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">显示名称</label>
             <input 
               type="text" 
               value={formData.name}
@@ -48,13 +48,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
         {/* Bio-Rhythm Section */}
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-             <Clock size={16} /> Energy & Schedule
+             <Clock size={16} /> 能量与日程
           </h3>
-          <p className="text-sm text-slate-500">Helping the AI suggest tasks at the right time.</p>
+          <p className="text-sm text-slate-500">帮助AI在合适的时间建议任务。</p>
           
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Work Start Hour</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">工作开始时间</label>
               <select 
                 value={formData.workStartHour}
                 onChange={e => setFormData({...formData, workStartHour: parseInt(e.target.value)})}
@@ -66,7 +66,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Work End Hour</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">工作结束时间</label>
               <select 
                 value={formData.workEndHour}
                 onChange={e => setFormData({...formData, workEndHour: parseInt(e.target.value)})}
@@ -85,7 +85,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
         {/* Appearance */}
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-             Appearance
+             外观
           </h3>
           <div className="flex gap-4">
             <button
@@ -98,7 +98,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
               }`}
             >
               <Sun size={24} />
-              <span className="text-sm font-medium">Light Mode</span>
+              <span className="text-sm font-medium">浅色模式</span>
             </button>
             <button
               type="button"
@@ -110,7 +110,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
               }`}
             >
               <Moon size={24} />
-              <span className="text-sm font-medium">Dark Mode</span>
+              <span className="text-sm font-medium">深色模式</span>
             </button>
           </div>
         </div>
@@ -120,9 +120,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
             type="submit"
             className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            {isSaved ? 'Saved Successfully!' : (
+            {isSaved ? '保存成功！' : (
                 <>
-                    <Save size={18} /> Save Settings
+                    <Save size={18} /> 保存设置
                 </>
             )}
           </button>

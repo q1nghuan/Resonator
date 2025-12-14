@@ -29,7 +29,7 @@ export const App: React.FC = () => {
     {
       id: 'welcome',
       role: 'model',
-      text: "We are floating in the stream of time. What shall we focus on today?",
+      text: "我们漂浮在时间的河流中。今天我们要专注于什么？",
       timestamp: Date.now()
     }
   ]);
@@ -70,7 +70,7 @@ export const App: React.FC = () => {
         const isCompleting = t.status !== TaskStatus.DONE;
         if (isCompleting) {
             confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#a78bfa', '#fb7185', '#34d399'] });
-            setToast({ message: "Stardust Collected.", icon: <Trophy className="text-yellow-400" /> });
+            setToast({ message: "收集到星尘。", icon: <Trophy className="text-yellow-400" /> });
         }
         return { ...t, status: isCompleting ? TaskStatus.DONE : TaskStatus.TODO };
       }
@@ -121,7 +121,7 @@ export const App: React.FC = () => {
             dueTime: action.taskData.dueTime || new Date().toISOString(),
           };
           setTasks(prev => [...prev, newTask]);
-          setToast({ message: "Orbit Established.", icon: <Rocket className="text-indigo-400" /> });
+          setToast({ message: "轨道已建立。", icon: <Rocket className="text-indigo-400" /> });
         }
         break;
       case 'UPDATE':
@@ -131,7 +131,7 @@ export const App: React.FC = () => {
             if (String(t.id) === String(action.taskId)) return { ...t, ...action.taskData, status: action.taskData.status || t.status };
             return t;
           }));
-          setToast({ message: "Trajectory Adjusted.", icon: <Rocket className="text-purple-400" /> });
+          setToast({ message: "轨迹已调整。", icon: <Rocket className="text-purple-400" /> });
         }
         break;
       case 'DELETE':
@@ -148,10 +148,10 @@ export const App: React.FC = () => {
   const handleSaveTask = (taskToSave: Task) => {
     if (editingTask) {
       setTasks(prev => prev.map(t => t.id === taskToSave.id ? taskToSave : t));
-      setToast({ message: "Signal Updated.", icon: <Rocket className="text-blue-400" /> });
+      setToast({ message: "信号已更新。", icon: <Rocket className="text-blue-400" /> });
     } else {
       setTasks(prev => [...prev, taskToSave]);
-      setToast({ message: "New Star Born.", icon: <Rocket className="text-indigo-400" /> });
+      setToast({ message: "新星诞生。", icon: <Rocket className="text-indigo-400" /> });
     }
     setIsTaskModalOpen(false);
   };
@@ -173,7 +173,7 @@ export const App: React.FC = () => {
                 Hello, {userSettings.name}
               </h1>
               <p className="text-indigo-200 text-sm font-mono opacity-70">
-                All systems active. {activeAgent === AgentType.IDEAL_SELF ? 'Ideal Self Mode' : 'Companion Mode'}.
+                所有系统运行中。{activeAgent === AgentType.IDEAL_SELF ? '理想自我模式' : '伴侣模式'}。
               </p>
             </header>
 

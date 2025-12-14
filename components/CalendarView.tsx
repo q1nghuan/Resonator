@@ -20,10 +20,10 @@ const COLORS = {
 };
 
 const CATEGORY_LABELS = {
-    work: 'Work',
-    personal: 'Life',
-    growth: 'Growth',
-    health: 'Health'
+    work: '工作',
+    personal: '生活',
+    growth: '成长',
+    health: '健康'
 };
 
 type DayStats = {
@@ -169,10 +169,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
         {/* --- HERO TITLE --- */}
         <div className="text-center mb-8 relative z-20 animate-in fade-in duration-1000">
             <h2 className="text-4xl md:text-5xl font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-purple-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                The Astrolabe
+                星盘
             </h2>
             <p className="text-xs font-mono text-slate-400 mt-2 uppercase tracking-[0.4em]">
-                {new Date(year, month).toLocaleString('default', { month: 'long' })} • {year}
+                {new Date(year, month).toLocaleString('zh-CN', { month: 'long', timeZone: 'Asia/Shanghai' })} • {year}
             </p>
         </div>
 
@@ -231,7 +231,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
                     <button onClick={prevMonth} className="text-slate-500 hover:text-white transition-colors"><ChevronLeft size={16}/></button>
                     <div className="text-center">
                         <span className="block text-2xl font-serif text-white font-bold drop-shadow-md">
-                            {currentDate.toLocaleString('default', { month: 'short' }).toUpperCase()}
+                            {currentDate.toLocaleString('zh-CN', { month: 'short', timeZone: 'Asia/Shanghai' }).toUpperCase()}
                         </span>
                     </div>
                     <button onClick={nextMonth} className="text-slate-500 hover:text-white transition-colors"><ChevronRight size={16}/></button>
@@ -281,7 +281,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
         {/* --- ANALYSIS SECTION --- */}
         <div className="relative z-10 px-4 pb-12">
             <h3 className="text-center font-mono text-xs text-slate-500 mb-8 uppercase tracking-[0.2em] opacity-50">
-                — Resonance Patterns —
+                — 共振模式 —
             </h3>
             
             <ResonanceWave data={moodHistory} />
@@ -306,7 +306,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
                                 {selectedDate.getDate()}
                              </h3>
                              <p className="text-xs text-indigo-300 font-mono uppercase tracking-[0.3em] mt-2">
-                                {selectedDate.toLocaleDateString('en-US', { month: 'long', weekday: 'long' })}
+                                {selectedDate.toLocaleDateString('zh-CN', { month: 'long', weekday: 'long', timeZone: 'Asia/Shanghai' })}
                              </p>
                         </div>
                         <button onClick={() => setIsDayModalOpen(false)} className="relative z-10 p-2 text-slate-400 hover:text-white transition-colors hover:rotate-90 duration-300">
@@ -319,7 +319,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
                          {selectedDateTasks.length === 0 ? (
                             <div className="text-center py-16 opacity-40">
                                 <Star size={24} className="mx-auto mb-3 text-white" />
-                                <span className="text-xs font-mono text-slate-300">No signals detected.</span>
+                                <span className="text-xs font-mono text-slate-300">未检测到信号。</span>
                             </div>
                          ) : (
                             selectedDateTasks.map((task, idx) => (
@@ -339,11 +339,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, moodHistory, 
                                             task.category === 'health' ? 'text-emerald-300 bg-emerald-500/10' :
                                             'text-rose-300 bg-rose-500/10'
                                         }`}>
-                                            {task.category}
+                                            {task.category === 'work' ? '工作' : task.category === 'personal' ? '个人' : task.category === 'growth' ? '成长' : '健康'}
                                         </span>
                                         {task.dueTime && (
                                             <span className="text-xs text-slate-400 font-mono">
-                                                {new Date(task.dueTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                                {new Date(task.dueTime).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit', timeZone: 'Asia/Shanghai'})}
                                             </span>
                                         )}
                                     </div>
