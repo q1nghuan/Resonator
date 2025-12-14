@@ -142,9 +142,41 @@ export const HolisticBalance: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
 
 // --- Component 3: Chronotype Scatter (Scatter) ---
 export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
+    // 获取本周的开始和结束日期（UTC+8时区）
+    const now = new Date();
+    
+    // 获取UTC+8时区的当前日期
+    const getUTC8Date = (date: Date) => {
+      const utc8Str = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        timeZone: 'Asia/Shanghai' 
+      });
+      const [month, day, year] = utc8Str.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    };
+    
+    const today = getUTC8Date(now);
+    
+    // 计算本周一（周一作为一周的开始）
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    // 计算本周日
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
     
     const data = tasks
-        .filter(t => t.dueTime)
+        .filter(t => {
+            if (!t.dueTime) return false;
+            const taskDate = getUTC8Date(new Date(t.dueTime));
+            // 检查任务日期是否在本周范围内（周一至周日）
+            return taskDate >= monday && taskDate <= sunday;
+        })
         .map(t => {
             const d = new Date(t.dueTime!);
             const hour = d.getHours() + d.getMinutes() / 60;
