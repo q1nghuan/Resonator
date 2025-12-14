@@ -8,7 +8,7 @@ interface AgentChatProps {
   currentAgent: AgentType;
   isTyping: boolean;
   onSendMessage: (text: string) => void;
-  onAgentChange: (agent: AgentType) => void;
+  onAgentChange?: (agent: AgentType) => void; // 可选，用于向后兼容
   onApproveAction: (action: TaskAction, messageId: string) => void;
   onDismissAction: (action: TaskAction, messageId: string) => void;
   userSettings?: UserSettings;
@@ -121,37 +121,26 @@ export const AgentChat: React.FC<AgentChatProps> = ({
     );
   };
 
+  const persona = getAgentPersona(currentAgent);
+  const IconComponent = currentAgent === AgentType.COMPANION ? Heart : Bot;
+
   return (
     <div className="flex flex-col h-full bg-white/50 backdrop-blur-xl border-l border-slate-200">
-      {/* Header / Persona Switcher */}
+      {/* Header - Single Agent Display */}
       <div className="p-4 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex p-1 bg-slate-100 rounded-xl mb-2">
-          <button 
-            onClick={() => onAgentChange(AgentType.COMPANION)}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-              currentAgent === AgentType.COMPANION 
-                ? 'bg-white text-secondary shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Heart size={16} className={currentAgent === AgentType.COMPANION ? 'fill-current' : ''} />
-            {getAgentPersona(AgentType.COMPANION).name}
-          </button>
-          <button 
-            onClick={() => onAgentChange(AgentType.IDEAL_SELF)}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-              currentAgent === AgentType.IDEAL_SELF 
-                ? 'bg-white text-primary shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Bot size={16} />
-            {getAgentPersona(AgentType.IDEAL_SELF).name}
-          </button>
+        <div className="flex items-center gap-3 mb-2">
+          <div className={`p-2 rounded-lg ${
+            currentAgent === AgentType.COMPANION 
+              ? 'bg-rose-100 text-rose-600' 
+              : 'bg-indigo-100 text-indigo-600'
+          }`}>
+            <IconComponent size={18} className={currentAgent === AgentType.COMPANION ? 'fill-current' : ''} />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-slate-800 text-sm">{persona.name}</h3>
+            <p className="text-xs text-slate-500">{persona.description}</p>
+          </div>
         </div>
-        <p className="text-xs text-center text-slate-400 px-4">
-          {getAgentPersona(currentAgent).description}
-        </p>
       </div>
 
       {/* Messages */}

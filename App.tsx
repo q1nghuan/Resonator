@@ -17,7 +17,6 @@ export const App: React.FC = () => {
   
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>(INITIAL_MOOD_HISTORY);
-  const [activeAgent, setActiveAgent] = useState<AgentType>(AgentType.COMPANION);
   const [userSettings, setUserSettings] = useState<UserSettings>({
     name: 'Alex',
     workStartHour: 9,
@@ -41,15 +40,30 @@ export const App: React.FC = () => {
   // 用于记录用户消息历史，用于分析习惯
   const userMessagesRef = useRef<string[]>([]);
   
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'model',
-      text: "我们漂浮在时间的河流中。今天我们要专注于什么？",
-      timestamp: Date.now()
-    }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
+  // 按agent类型分别存储聊天记录
+  const [chatMessagesByAgent, setChatMessagesByAgent] = useState<Record<AgentType, ChatMessage[]>>({
+    [AgentType.COMPANION]: [
+      {
+        id: 'welcome-companion',
+        role: 'model',
+        text: "我们漂浮在时间的河流中。今天我们要专注于什么？",
+        timestamp: Date.now()
+      }
+    ],
+    [AgentType.IDEAL_SELF]: [
+      {
+        id: 'welcome-ideal',
+        role: 'model',
+        text: "我们站在成长的起点。今天我们要如何超越昨天的自己？",
+        timestamp: Date.now()
+      }
+    ]
+  });
+  // 每个agent独立的typing状态
+  const [isTypingByAgent, setIsTypingByAgent] = useState<Record<AgentType, boolean>>({
+    [AgentType.COMPANION]: false,
+    [AgentType.IDEAL_SELF]: false
+  });
   const [toast, setToast] = useState<{message: string, icon: React.ReactNode} | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -165,14 +179,21 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, agentType: AgentType) => {
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text, timestamp: Date.now() };
-    setChatMessages(prev => [...prev, userMsg]);
-    setIsTyping(true);
+    
+    // 将用户消息添加到对应agent的聊天记录中
+    setChatMessagesByAgent(prev => ({
+      ...prev,
+      [agentType]: [...prev[agentType], userMsg]
+    }));
+    
+    // 设置对应agent的typing状态
+    setIsTypingByAgent(prev => ({ ...prev, [agentType]: true }));
 
     const moodContext = `用户上周平均心情为 ${(moodHistory.reduce((a,b) => a + b.score, 0) / moodHistory.length).toFixed(1)}/10。`;
     const aiResponse = await generateAgentResponse(
-      activeAgent, 
+      agentType, 
       text, 
       tasks, 
       moodContext,
@@ -191,20 +212,29 @@ export const App: React.FC = () => {
       suggestedActions: aiResponse.suggested_actions
     };
     
-    setChatMessages(prev => [...prev, modelMsg]);
-    setIsTyping(false);
+    // 将AI回复添加到对应agent的聊天记录中
+    setChatMessagesByAgent(prev => ({
+      ...prev,
+      [agentType]: [...prev[agentType], modelMsg]
+    }));
+    
+    // 重置对应agent的typing状态
+    setIsTypingByAgent(prev => ({ ...prev, [agentType]: false }));
   };
 
-  const removeActionFromMessage = (messageId: string, actionToRemove: TaskAction) => {
-    setChatMessages(prev => prev.map(msg => {
+  const removeActionFromMessage = (messageId: string, actionToRemove: TaskAction, agentType: AgentType) => {
+    setChatMessagesByAgent(prev => ({
+      ...prev,
+      [agentType]: prev[agentType].map(msg => {
         if (msg.id === messageId && msg.suggestedActions) {
-            return { ...msg, suggestedActions: msg.suggestedActions.filter(a => a !== actionToRemove) };
+          return { ...msg, suggestedActions: msg.suggestedActions.filter(a => a !== actionToRemove) };
         }
         return msg;
+      })
     }));
   };
 
-  const handleApproveAction = (action: TaskAction, messageId: string) => {
+  const handleApproveAction = (action: TaskAction, messageId: string, agentType: AgentType) => {
     switch (action.type) {
       case 'ADD':
         if (action.taskData) {
@@ -235,10 +265,12 @@ export const App: React.FC = () => {
         if (action.taskId) setTasks(prev => prev.filter(t => String(t.id) !== String(action.taskId)));
         break;
     }
-    removeActionFromMessage(messageId, action);
+    removeActionFromMessage(messageId, action, agentType);
   };
 
-  const handleDismissAction = (action: TaskAction, messageId: string) => removeActionFromMessage(messageId, action);
+  const handleDismissAction = (action: TaskAction, messageId: string, agentType: AgentType) => 
+    removeActionFromMessage(messageId, action, agentType);
+
 
   const openCreateModal = () => { setEditingTask(null); setIsTaskModalOpen(true); };
   const openEditModal = (task: Task) => { setEditingTask(task); setIsTaskModalOpen(true); };
@@ -270,7 +302,7 @@ export const App: React.FC = () => {
                 Hello, {userSettings.name}
               </h1>
               <p className="text-indigo-200 text-sm font-mono opacity-70">
-                所有系统运行中。{activeAgent === AgentType.IDEAL_SELF ? '理想自我模式' : '伴侣模式'}。
+                所有系统运行中。双代理模式已激活。
               </p>
             </header>
 
@@ -336,20 +368,33 @@ export const App: React.FC = () => {
           {renderContent()}
         </div>
 
-        {/* Right: AI Companion Panel (Floating Glass) */}
-        <div className="hidden md:block w-[380px] lg:w-[420px] h-full p-6 pl-0">
-             <div className="h-full w-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
-                <AgentChat 
-                    messages={chatMessages}
-                    currentAgent={activeAgent}
-                    isTyping={isTyping}
-                    onSendMessage={handleSendMessage}
-                    onAgentChange={setActiveAgent}
-                    onApproveAction={handleApproveAction}
-                    onDismissAction={handleDismissAction}
-                    userSettings={userSettings}
-                />
-             </div>
+        {/* Right: AI Agent Panels (Side by Side) */}
+        <div className="hidden lg:flex gap-4 w-[760px] xl:w-[840px] h-full p-6 pl-0">
+          {/* Companion Agent */}
+          <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
+            <AgentChat 
+              messages={chatMessagesByAgent[AgentType.COMPANION]}
+              currentAgent={AgentType.COMPANION}
+              isTyping={isTypingByAgent[AgentType.COMPANION]}
+              onSendMessage={(text) => handleSendMessage(text, AgentType.COMPANION)}
+              onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.COMPANION)}
+              onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.COMPANION)}
+              userSettings={userSettings}
+            />
+          </div>
+          
+          {/* Ideal Self Agent */}
+          <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
+            <AgentChat 
+              messages={chatMessagesByAgent[AgentType.IDEAL_SELF]}
+              currentAgent={AgentType.IDEAL_SELF}
+              isTyping={isTypingByAgent[AgentType.IDEAL_SELF]}
+              onSendMessage={(text) => handleSendMessage(text, AgentType.IDEAL_SELF)}
+              onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.IDEAL_SELF)}
+              onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.IDEAL_SELF)}
+              userSettings={userSettings}
+            />
+          </div>
         </div>
       </main>
 
