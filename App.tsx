@@ -308,7 +308,7 @@ export const App: React.FC = () => {
 
             <DashboardVisuals moodHistory={moodHistory} tasks={tasks} />
 
-            <section className="glass-panel rounded-3xl p-6 relative overflow-hidden flex-1 min-h-[400px] border-t border-white/10">
+            <section className="glass-panel rounded-3xl p-6 relative overflow-hidden flex-1 min-h-[400px] border-t border-white/10 mt-6">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
               <TaskBoard 
                 tasks={tasks} 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '../types';
-import { X, Calendar, Clock, Briefcase, User, Sparkles, Heart, Trash2, Check } from 'lucide-react';
+import { X, Calendar, Clock, Briefcase, User, Sparkles, Heart, Trash2, Check, AlertTriangle, TrendingUp } from 'lucide-react';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -24,6 +24,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState(30);
+  const [importance, setImportance] = useState<Task['importance']>('medium');
+  const [urgency, setUrgency] = useState<Task['urgency']>('medium');
 
   // Reset or populate form when opening
   useEffect(() => {
@@ -33,6 +35,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
         setDescription(initialTask.description || '');
         setCategory(initialTask.category);
         setDuration(initialTask.durationMinutes);
+        setImportance(initialTask.importance || 'medium');
+        setUrgency(initialTask.urgency || 'medium');
         
         if (initialTask.dueTime) {
           const d = new Date(initialTask.dueTime);
@@ -45,6 +49,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
         setDescription('');
         setCategory('personal');
         setDuration(30);
+        setImportance('medium');
+        setUrgency('medium');
         const now = new Date();
         setDate(now.toISOString().split('T')[0]);
         setTime(now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }));
@@ -72,6 +78,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
       category,
       durationMinutes: duration,
       dueTime,
+      importance: importance === 'medium' ? undefined : importance,
+      urgency: urgency === 'medium' ? undefined : urgency,
     };
 
     onSave(newTask);
@@ -170,6 +178,98 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                   </div>
                 </div>
              </div>
+          </div>
+
+          {/* Priority Matrix */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <TrendingUp size={12} /> 优先级矩阵
+              </label>
+              <p className="text-xs text-slate-400 mb-3">帮助您更好地安排任务优先级</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Importance */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">重要性</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setImportance('high')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        importance === 'high'
+                          ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      高
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportance('medium')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        importance === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      中
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportance('low')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        importance === 'low'
+                          ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      低
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Urgency */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">紧急性</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setUrgency('high')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        urgency === 'high'
+                          ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      高
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUrgency('medium')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        urgency === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      中
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUrgency('low')}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        urgency === 'low'
+                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      低
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Description */}

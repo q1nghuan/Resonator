@@ -23,8 +23,8 @@ const generateMockTasks = (): Task[] => {
       tasks.push(
         {
           id: `mock-heavy-${day}-1`,
-          title: 'Deep Work: System Architecture',
-          description: 'Focus on core scalability and database schema.',
+          title: '深度工作：系统架构设计',
+          description: '专注于核心可扩展性和数据库架构。',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'work',
           durationMinutes: 120,
@@ -32,8 +32,8 @@ const generateMockTasks = (): Task[] => {
         },
         {
           id: `mock-heavy-${day}-2`,
-          title: 'Design Team Sync',
-          description: 'Weekly sync with design team.',
+          title: '设计团队同步会议',
+          description: '与设计团队的每周同步。',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'work',
           durationMinutes: 60,
@@ -41,8 +41,8 @@ const generateMockTasks = (): Task[] => {
         },
         {
           id: `mock-heavy-${day}-3`,
-          title: 'Evening HIIT Workout',
-          description: 'High intensity interval training.',
+          title: '晚间高强度间歇训练',
+          description: '高强度间歇训练。',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'health',
           durationMinutes: 45,
@@ -58,7 +58,7 @@ const generateMockTasks = (): Task[] => {
        tasks.push(
         {
           id: `mock-med-${day}-1`,
-          title: 'Client Review',
+          title: '客户评审',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'work',
           durationMinutes: 45,
@@ -66,7 +66,7 @@ const generateMockTasks = (): Task[] => {
         },
         {
           id: `mock-med-${day}-2`,
-          title: 'Reading: Cognitive Science',
+          title: '阅读：认知科学',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'growth',
           durationMinutes: 30,
@@ -81,7 +81,7 @@ const generateMockTasks = (): Task[] => {
        const isPast = day < now.getDate();
        tasks.push({
           id: `mock-light-${day}-1`,
-          title: 'Morning Meditation',
+          title: '晨间冥想',
           status: isPast ? TaskStatus.DONE : TaskStatus.TODO,
           category: 'health',
           durationMinutes: 15,
@@ -94,8 +94,8 @@ const generateMockTasks = (): Task[] => {
   tasks.push(
     {
       id: 'today-1',
-      title: 'Morning Reflection',
-      description: 'Write down 3 things I am grateful for.',
+      title: '晨间反思',
+      description: '写下3件让我感恩的事情。',
       status: TaskStatus.DONE,
       category: 'growth',
       durationMinutes: 15,
@@ -103,8 +103,8 @@ const generateMockTasks = (): Task[] => {
     },
     {
       id: 'today-2',
-      title: 'Deep Work: Project Alpha',
-      description: 'Focus on the Q3 report analysis.',
+      title: '深度工作：项目Alpha',
+      description: '专注于Q3报告分析。',
       status: TaskStatus.IN_PROGRESS,
       category: 'work',
       durationMinutes: 90,
@@ -112,8 +112,8 @@ const generateMockTasks = (): Task[] => {
     },
     {
       id: 'today-3',
-      title: 'Gym Session',
-      description: 'Cardio and light weights.',
+      title: '健身房训练',
+      description: '有氧运动和轻量举重。',
       status: TaskStatus.TODO,
       category: 'health',
       durationMinutes: 60,
@@ -121,8 +121,8 @@ const generateMockTasks = (): Task[] => {
     },
     {
       id: 'today-4',
-      title: 'Read Research Paper',
-      description: 'Read the latest CHI paper on self-voice.',
+      title: '阅读研究论文',
+      description: '阅读最新的CHI论文关于自我声音。',
       status: TaskStatus.TODO,
       category: 'growth',
       durationMinutes: 45,
@@ -147,8 +147,8 @@ export const INITIAL_MOOD_HISTORY: MoodEntry[] = Array.from({ length: 14 }).map(
   return {
     date: d.toISOString().split('T')[0],
     score: score, 
-    tags: score > 7 ? ['energetic', 'flow'] : score < 5 ? ['tired', 'anxious'] : ['neutral'],
-    note: 'Sample mood entry'
+    tags: score > 7 ? ['精力充沛', '心流'] : score < 5 ? ['疲惫', '焦虑'] : ['中性'],
+    note: '示例心情记录'
   };
 });
 

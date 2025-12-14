@@ -5,7 +5,7 @@ import {
   ScatterChart, Scatter, ZAxis, Cell
 } from 'recharts';
 import { MoodEntry, Task } from '../types';
-import { Activity, Hexagon, Clock4 } from 'lucide-react';
+import { Activity, Hexagon, Clock4, Target } from 'lucide-react';
 
 interface VisualizationsProps {
   moodHistory: MoodEntry[];
@@ -242,9 +242,214 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
     );
 };
 
+// --- Component 4: Priority Matrix (Four Quadrants) ---
+export const PriorityMatrix: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
+  // 获取本周的开始和结束日期（UTC+8时区）
+  const now = new Date();
+  const getUTC8Date = (date: Date) => {
+    const utc8Str = date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      timeZone: 'Asia/Shanghai' 
+    });
+    const [month, day, year] = utc8Str.split('/').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  
+  const today = getUTC8Date(now);
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  
+  // 过滤出本周且未完成的任务
+  const activeTasks = tasks.filter(t => {
+    if (t.status === 'DONE') return false;
+    if (!t.dueTime) return false;
+    const taskDate = getUTC8Date(new Date(t.dueTime));
+    return taskDate >= monday && taskDate <= sunday;
+  });
+  
+  // 将任务分类到四个象限
+  const quadrants: Record<string, Task[]> = {
+    '重要紧急': [],
+    '重要非紧急': [],
+    '非重要紧急': [],
+    '非重要非紧急': [],
+  };
+
+  // 分类任务
+  activeTasks.forEach(task => {
+    const importance = task.importance || 'high'; // 默认为重要
+    const urgency = task.urgency;
+    
+    if (!urgency && task.dueTime) {
+      // 如果没有设置紧急性，根据截止时间推断
+      const dueDate = new Date(task.dueTime);
+      const now = new Date();
+      const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      const inferredUrgency = hoursUntilDue <= 24 ? 'high' : 'low';
+      
+      if (importance === 'high' && inferredUrgency === 'high') {
+        quadrants['重要紧急'].push(task);
+      } else if (importance === 'high' && inferredUrgency === 'low') {
+        quadrants['重要非紧急'].push(task);
+      } else if (importance === 'low' && inferredUrgency === 'high') {
+        quadrants['非重要紧急'].push(task);
+      } else {
+        quadrants['非重要非紧急'].push(task);
+      }
+    } else {
+      const finalUrgency = urgency || 'low';
+      if (importance === 'high' && finalUrgency === 'high') {
+        quadrants['重要紧急'].push(task);
+      } else if (importance === 'high' && finalUrgency === 'low') {
+        quadrants['重要非紧急'].push(task);
+      } else if (importance === 'low' && finalUrgency === 'high') {
+        quadrants['非重要紧急'].push(task);
+      } else {
+        quadrants['非重要非紧急'].push(task);
+      }
+    }
+  });
+
+  const quadrantConfig: Record<string, { 
+    label: string; 
+    bg: string; 
+    border: string; 
+    text: string;
+    icon: string;
+    description: string;
+  }> = {
+    '重要紧急': {
+      label: '重要 · 紧急',
+      bg: 'bg-gradient-to-br from-red-500/20 to-red-600/10',
+      border: 'border-red-400/50',
+      text: 'text-red-200',
+      icon: '🔥',
+      description: '立即处理'
+    },
+    '重要非紧急': {
+      label: '重要 · 非紧急',
+      bg: 'bg-gradient-to-br from-green-500/20 to-green-600/10',
+      border: 'border-green-400/50',
+      text: 'text-green-200',
+      icon: '⭐',
+      description: '计划执行'
+    },
+    '非重要紧急': {
+      label: '非重要 · 紧急',
+      bg: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10',
+      border: 'border-orange-400/50',
+      text: 'text-orange-200',
+      icon: '⚡',
+      description: '委托他人'
+    },
+    '非重要非紧急': {
+      label: '非重要 · 非紧急',
+      bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
+      border: 'border-blue-400/50',
+      text: 'text-blue-200',
+      icon: '📋',
+      description: '稍后处理'
+    },
+  };
+
+  return (
+    <div className="w-full glass-panel rounded-3xl p-6 relative overflow-hidden border border-white/10 mb-6">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/20 rounded-lg">
+              <Target size={18} className="text-indigo-300"/>
+            </div>
+            <div>
+              <h3 className="text-sm font-serif font-bold text-white">优先级矩阵</h3>
+              <p className="text-xs text-slate-400 font-mono">任务优先级可视化</p>
+            </div>
+          </div>
+          <div className="text-xs text-slate-500 font-mono">
+            共 {activeTasks.length} 个任务
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          {Object.entries(quadrantConfig).map(([key, config]) => (
+            <div 
+              key={key}
+              className={`${config.bg} ${config.border} border-2 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group hover:scale-[1.02] transition-all duration-300`}
+            >
+              {/* Quadrant decoration */}
+              {/* <div className="absolute top-0 right-0 w-20 h-20 opacity-10 group-hover:opacity-20 transition-opacity">
+                <div className="absolute top-2 right-2 text-4xl">{config.icon}</div>
+              </div> */}
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{config.icon}</span>
+                    <div>
+                      <div className={`text-sm font-bold ${config.text}`}>
+                        {config.label}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono">
+                        {config.description}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`text-xs font-bold ${config.text} bg-white/10 px-2 py-1 rounded-full`}>
+                    {quadrants[key].length}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
+                  {quadrants[key].length > 0 ? (
+                    quadrants[key].map(task => (
+                      <div 
+                        key={task.id} 
+                        className={`text-xs ${config.text} bg-white/5 rounded-lg px-2 py-1.5 backdrop-blur-sm hover:bg-white/10 transition-colors cursor-pointer group/item`}
+                        title={task.description || task.title}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 group-hover/item:opacity-100 transition-opacity"></span>
+                          <span className="truncate flex-1">{task.title}</span>
+                        </div>
+                        {task.dueTime && (
+                          <div className="text-[10px] text-slate-500 mt-1 ml-3.5">
+                            {new Date(task.dueTime).toLocaleTimeString('zh-CN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              timeZone: 'Asia/Shanghai'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className={`text-xs ${config.text} opacity-40 italic text-center py-4`}>
+                      暂无任务
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const DashboardVisuals: React.FC<VisualizationsProps> = ({ moodHistory, tasks }) => {
   return (
-    <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6 relative z-0">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="col-span-1">
                 <ResonanceWave data={moodHistory} />
@@ -255,6 +460,10 @@ export const DashboardVisuals: React.FC<VisualizationsProps> = ({ moodHistory, t
             <div className="col-span-1">
                 <ChronotypeScatter tasks={tasks} />
             </div>
+        </div>
+        {/* Priority Matrix - Full Width, with proper spacing and z-index */}
+        <div className="w-full relative z-10">
+            <PriorityMatrix tasks={tasks} />
         </div>
     </div>
   );

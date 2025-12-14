@@ -18,6 +18,8 @@ export interface Task {
   status: TaskStatus;
   category: 'work' | 'personal' | 'growth' | 'health';
   durationMinutes: number;
+  importance?: 'high' | 'low' | 'medium'; // 重要性：高/中/低
+  urgency?: 'high' | 'low' | 'medium'; // 紧急性：高/中/低
 }
 
 export interface MoodEntry {
