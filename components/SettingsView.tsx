@@ -27,9 +27,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSave }) 
   };
 
   return (
-    <div className="max-w-2xl mx-auto pt-4">
+    // 修改这里：将 max-w-2xl 改为 max-w-4xl (或者 5xl/6xl) 以增加宽度
+    <div className="w-full max-w-2xl mx-auto pt-4">
       <div className="mb-8">
-        <h2 className="text-2xl font-serif font-bold text-slate-800">设置</h2>
+        <h2 className="text-2xl font-serif font-bold text-slate-300">设置</h2>
         <p className="text-slate-500 text-sm">自定义你的 Resonator 体验。</p>
       </div>
 

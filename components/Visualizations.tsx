@@ -31,7 +31,7 @@ const CustomTooltip = ({ active, payload, label, type }: any) => {
                 <p className="text-indigo-300 font-serif font-bold mb-1 text-sm">{payload[0].payload.name}</p>
                 <div className="flex gap-3 text-slate-300">
                     <span>{payload[0].payload.timeStr}</span>
-                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-slate-200">{payload[0].value}m</span>
+                    {/* <span className="bg-white/10 px-1.5 py-0.5 rounded text-slate-200">{payload[0].value}m</span> */}
                 </div>
              </>
         ) : (
@@ -218,8 +218,9 @@ export const ChronotypeScatter: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                         type="number" 
                         dataKey="y" 
                         name="时长" 
-                        unit=" 分钟" 
                         tick={{fontSize: 9, fill: '#64748b'}}
+                        width={55}
+                        tickFormatter={(value) => `${value}分`}
                         axisLine={false}
                         tickLine={false}
                     />
@@ -360,7 +361,7 @@ export const PriorityMatrix: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
   };
 
   return (
-    <div className="w-full glass-panel rounded-3xl p-6 relative overflow-hidden border border-white/10 mb-6">
+    <div className="w-full glass-panel rounded-3xl p-6 relative overflow-hidden border border-white/10">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
       
@@ -423,7 +424,10 @@ export const PriorityMatrix: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                         </div>
                         {task.dueTime && (
                           <div className="text-[10px] text-slate-500 mt-1 ml-3.5">
-                            {new Date(task.dueTime).toLocaleTimeString('zh-CN', {
+                            {new Date(task.dueTime).toLocaleString('zh-CN', {
+                              month: 'short',
+                              day: 'numeric',
+                              weekday: 'short',
                               hour: '2-digit',
                               minute: '2-digit',
                               timeZone: 'Asia/Shanghai'

@@ -360,42 +360,46 @@ export const App: React.FC = () => {
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col md:flex-row h-full relative z-10">
+{/* App.tsx 的 main 部分 */}
+<main className="flex-1 flex flex-col md:flex-row h-full relative z-10">
         
-        {/* Left: Dynamic Content */}
+        {/* 左侧：动态内容区 */}
+        {/* 这里的 flex-1 会在右侧消失时自动撑满全屏 */}
         <div className="flex-1 h-full overflow-y-auto p-4 md:p-8 lg:px-12 lg:py-8 scrollbar-hide flex flex-col">
           {renderContent()}
         </div>
 
-        {/* Right: AI Agent Panels (Side by Side) */}
-        <div className="hidden lg:flex gap-4 w-[760px] xl:w-[840px] h-full p-6 pl-0">
-          {/* Companion Agent */}
-          <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
-            <AgentChat 
-              messages={chatMessagesByAgent[AgentType.COMPANION]}
-              currentAgent={AgentType.COMPANION}
-              isTyping={isTypingByAgent[AgentType.COMPANION]}
-              onSendMessage={(text) => handleSendMessage(text, AgentType.COMPANION)}
-              onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.COMPANION)}
-              onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.COMPANION)}
-              userSettings={userSettings}
-            />
+        {/* 右侧：AI 代理面板 */}
+        {/* 🔥🔥🔥 核心修改在这里：添加这个判断 🔥🔥🔥 */}
+        {currentView !== 'settings' && (
+          <div className="hidden lg:flex gap-4 w-[760px] xl:w-[840px] h-full p-6 pl-0">
+            {/* Companion Agent */}
+            <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
+              <AgentChat 
+                messages={chatMessagesByAgent[AgentType.COMPANION]}
+                currentAgent={AgentType.COMPANION}
+                isTyping={isTypingByAgent[AgentType.COMPANION]}
+                onSendMessage={(text) => handleSendMessage(text, AgentType.COMPANION)}
+                onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.COMPANION)}
+                onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.COMPANION)}
+                userSettings={userSettings}
+              />
+            </div>
+            
+            {/* Ideal Self Agent */}
+            <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
+              <AgentChat 
+                messages={chatMessagesByAgent[AgentType.IDEAL_SELF]}
+                currentAgent={AgentType.IDEAL_SELF}
+                isTyping={isTypingByAgent[AgentType.IDEAL_SELF]}
+                onSendMessage={(text) => handleSendMessage(text, AgentType.IDEAL_SELF)}
+                onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.IDEAL_SELF)}
+                onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.IDEAL_SELF)}
+                userSettings={userSettings}
+              />
+            </div>
           </div>
-          
-          {/* Ideal Self Agent */}
-          <div className="flex-1 min-w-0 h-full glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
-            <AgentChat 
-              messages={chatMessagesByAgent[AgentType.IDEAL_SELF]}
-              currentAgent={AgentType.IDEAL_SELF}
-              isTyping={isTypingByAgent[AgentType.IDEAL_SELF]}
-              onSendMessage={(text) => handleSendMessage(text, AgentType.IDEAL_SELF)}
-              onApproveAction={(action, msgId) => handleApproveAction(action, msgId, AgentType.IDEAL_SELF)}
-              onDismissAction={(action, msgId) => handleDismissAction(action, msgId, AgentType.IDEAL_SELF)}
-              userSettings={userSettings}
-            />
-          </div>
-        </div>
+        )}
       </main>
 
       {/* Task Modal */}
