@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Task, TaskStatus } from '../types';
-import { CheckCircle2, Circle, Clock, Plus, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Plus, AlertCircle, Calendar } from 'lucide-react';
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -82,19 +82,115 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
 };
 
 export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onAddTask, onEditTask }) => {
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const getScore = (status: TaskStatus) => {
-        switch(status) {
+  // 获取今天的日期字符串（UTC+8时区），用于比较
+  const today = new Date();
+  const todayDateStr = today.toLocaleDateString('zh-CN', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit',
+    timeZone: 'Asia/Shanghai' 
+  });
+
+  // 过滤出当天及未来的任务，并按日期分组
+  const tasksByDate = useMemo(() => {
+    const filtered = tasks.filter(task => {
+      if (!task.dueTime) return false;
+      const taskDate = new Date(task.dueTime);
+      const taskDateStr = taskDate.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'Asia/Shanghai'
+      });
+      // 比较日期字符串（格式：YYYY/MM/DD）
+      return taskDateStr >= todayDateStr;
+    });
+
+    // 按日期分组
+    const grouped: Record<string, Task[]> = {};
+    filtered.forEach(task => {
+      if (!task.dueTime) return;
+      const taskDate = new Date(task.dueTime);
+      const dateKey = taskDate.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'Asia/Shanghai'
+      });
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(task);
+    });
+
+    // 对每个日期的任务进行排序
+    Object.keys(grouped).forEach(dateKey => {
+      grouped[dateKey].sort((a, b) => {
+        const getScore = (status: TaskStatus) => {
+          switch(status) {
             case TaskStatus.PENDING_RESCHEDULE: return 0;
             case TaskStatus.IN_PROGRESS: return 1;
             case TaskStatus.TODO: return 2;
             case TaskStatus.DONE: return 3;
             default: return 2;
+          }
+        };
+        if (getScore(a.status) !== getScore(b.status)) {
+          return getScore(a.status) - getScore(b.status);
         }
-    };
-    if (getScore(a.status) !== getScore(b.status)) return getScore(a.status) - getScore(b.status);
-    return (a.dueTime || '') > (b.dueTime || '') ? 1 : -1;
-  });
+        return (a.dueTime || '') > (b.dueTime || '') ? 1 : -1;
+      });
+    });
+
+    // 按日期排序
+    const sortedDates = Object.keys(grouped).sort((a, b) => {
+      const dateA = new Date(a.replace(/\//g, '-'));
+      const dateB = new Date(b.replace(/\//g, '-'));
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return sortedDates.map(dateKey => ({
+      date: dateKey,
+      tasks: grouped[dateKey]
+    }));
+  }, [tasks, todayDateStr]);
+
+  // 格式化日期显示
+  const formatDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr.replace(/\//g, '-'));
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Shanghai'
+    });
+    
+    if (dateStr === todayStr) {
+      return '今天';
+    }
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Shanghai'
+    });
+    
+    if (dateStr === tomorrowStr) {
+      return '明天';
+    }
+    
+    return date.toLocaleDateString('zh-CN', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+      timeZone: 'Asia/Shanghai'
+    });
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -111,19 +207,36 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-20 scrollbar-hide">
-        {sortedTasks.length === 0 ? (
+      <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-20 scrollbar-hide">
+        {tasksByDate.length === 0 ? (
            <div className="text-center py-20 opacity-50">
              <p className="text-slate-400 font-serif italic text-lg">虚空中的寂静。</p>
            </div>
         ) : (
-            sortedTasks.map(task => (
-            <TaskCard 
-                key={task.id} 
-                task={task} 
-                onToggle={() => onToggleStatus(task.id)} 
-                onEdit={() => onEditTask(task)}
-            />
+            tasksByDate.map(({ date, tasks }) => (
+              <div key={date} className="space-y-3">
+                {/* 日期标题 */}
+                <div className="flex items-center gap-2 px-2 sticky top-0 z-10 bg-transparent backdrop-blur-sm pb-2">
+                  <Calendar size={16} className="text-indigo-400" />
+                  <h3 className="text-sm font-mono font-bold text-indigo-300 uppercase tracking-wider">
+                    {formatDateLabel(date)}
+                  </h3>
+                  <div className="flex-1 h-px bg-gradient-to-r from-indigo-500/30 to-transparent"></div>
+                  <span className="text-xs text-slate-500 font-mono">{tasks.length} 个任务</span>
+                </div>
+                
+                {/* 该日期的任务列表 */}
+                <div className="space-y-3 pl-2">
+                  {tasks.map(task => (
+                    <TaskCard 
+                      key={task.id} 
+                      task={task} 
+                      onToggle={() => onToggleStatus(task.id)} 
+                      onEdit={() => onEditTask(task)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))
         )}
       </div>
