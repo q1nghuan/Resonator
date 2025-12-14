@@ -4,7 +4,7 @@ import { INITIAL_TASKS, INITIAL_MOOD_HISTORY, AGENT_PERSONAS } from './constants
 import { TaskBoard } from './components/TaskBoard';
 import { AgentChat } from './components/AgentChat';
 import { DashboardVisuals } from './components/Visualizations';
-import { generateAgentResponse } from './services/geminiService';
+import { generateAgentResponse } from './services/qwenService';
 import { TaskModal } from './components/TaskModal';
 import { CalendarView } from './components/CalendarView';
 import { SettingsView } from './components/SettingsView';

@@ -11,8 +11,10 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.API_KEY': JSON.stringify(env.QWEN_API_KEY || env.API_KEY),
+        'process.env.QWEN_API_KEY': JSON.stringify(env.QWEN_API_KEY),
+        'process.env.QWEN_API_BASE_URL': JSON.stringify(env.QWEN_API_BASE_URL),
+        'process.env.QWEN_MODEL': JSON.stringify(env.QWEN_MODEL)
       },
       resolve: {
         alias: {
