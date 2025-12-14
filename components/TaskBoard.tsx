@@ -13,7 +13,7 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
   const isDone = task.status === TaskStatus.DONE;
   
   // ---------------------------------------------------------
-  // 修复逻辑：实时计算是否过期
+  // 实时计算是否过期
   // ---------------------------------------------------------
   const isOverdue = useMemo(() => {
     if (isDone || !task.dueTime) return false;
@@ -22,7 +22,6 @@ const TaskCard: React.FC<{ task: Task; onToggle: () => void; onEdit: () => void 
 
   // isReschedule: 既包括手动标记为重排的状态，也包括时间上已经过期的任务
   const isReschedule = task.status === TaskStatus.PENDING_RESCHEDULE || isOverdue;
-  // ---------------------------------------------------------
 
   // Category Color Map for Dark Mode
   const CAT_STYLES = {
@@ -110,7 +109,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
 
   const tasksByDate = useMemo(() => {
     // ---------------------------------------------------------
-    // 修复逻辑：不过滤掉过去的未完成任务
+    // 过滤逻辑
     // ---------------------------------------------------------
     const filtered = tasks.filter(task => {
       if (!task.dueTime) return false;
@@ -145,27 +144,28 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onToggleStatus, onA
       grouped[dateKey].push(task);
     });
 
-    // 排序逻辑优化：优先显示过期/重排任务
+
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => {
-        const now = new Date();
-        const getScore = (task: Task) => {
-           // 计算是否过期
-           const isExpired = task.dueTime && new Date(task.dueTime) < now && task.status !== TaskStatus.DONE;
-           
-           if (task.status === TaskStatus.DONE) return 4;
-           if (task.status === TaskStatus.PENDING_RESCHEDULE || isExpired) return 0; // 最优先
-           if (task.status === TaskStatus.IN_PROGRESS) return 1;
-           return 2; // TODO
-        };
+        // A. 优先把“已完成”的任务放到最后
+        const isDoneA = a.status === TaskStatus.DONE;
+        const isDoneB = b.status === TaskStatus.DONE;
         
-        const scoreA = getScore(a);
-        const scoreB = getScore(b);
-
-        if (scoreA !== scoreB) {
-          return scoreA - scoreB;
+        if (isDoneA !== isDoneB) {
+            return isDoneA ? 1 : -1; // 完成的(true)排在未完成(false)后面
         }
-        return (a.dueTime || '') > (b.dueTime || '') ? 1 : -1;
+
+        // B. 将时间字符串转为毫秒数 (Number) 再比较
+        // 这样无论格式是 UTC ("...Z") 还是本地 ("...T10:00")，都会被 Date 对象正确解析为绝对时间
+        const timeA = new Date(a.dueTime || 0).getTime();
+        const timeB = new Date(b.dueTime || 0).getTime();
+        
+        // C. 如果时间戳完全相同，用 ID 兜底
+        if (timeA === timeB) {
+            return a.id > b.id ? 1 : -1;
+        }
+
+        return timeA - timeB; // 从小到大排序 (早 -> 晚)
       });
     });
 
